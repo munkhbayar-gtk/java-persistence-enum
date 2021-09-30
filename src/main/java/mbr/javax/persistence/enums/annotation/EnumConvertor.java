@@ -1,4 +1,4 @@
-package annotation;
+package mbr.javax.persistence.enums.annotation;
 
 import javax.persistence.EnumType;
 import java.lang.annotation.ElementType;

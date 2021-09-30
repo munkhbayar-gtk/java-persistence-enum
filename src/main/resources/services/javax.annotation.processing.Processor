@@ -1,1 +1,1 @@
-hibernate.annotation.EnumConvertorAnnotationProcessor
+mbr.javax.persistence.enums.annotation.EnumConvertorAnnotationProcessor

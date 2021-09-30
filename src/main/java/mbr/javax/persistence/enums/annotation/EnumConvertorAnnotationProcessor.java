@@ -1,4 +1,4 @@
-package annotation;
+package mbr.javax.persistence.enums.annotation;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 @SupportedAnnotationTypes(
-        "mbr.javax.persistence.annotation.EnumConvertor")
+        "mbr.javax.persistence.enums.annotation.EnumConvertor")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
     @Override
