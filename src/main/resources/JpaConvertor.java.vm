@@ -1,0 +1,45 @@
+${packageLine}
+
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+import javax.persistence.EnumType;
+
+${enumClassImportLine}
+
+
+@Converter(autoApply = true)
+public class ${convertorSimpleClassName} implements AttributeConverter<${simpleClassName}, String> {
+
+    private final EnumType TYPE = EnumType.${enumType};
+
+    @Override
+    public String convertToDatabaseColumn(${simpleClassName} attribute) {
+        return attribute.name();
+    }
+
+    @Override
+    public ${simpleClassName} convertToEntityAttribute(String dbData) {
+        if(TYPE == EnumType.STRING) {
+            return convertToEntityAttributeByName(dbData);
+        }
+        return convertToEntityAttributeByOrdinalValue(dbData);
+
+
+    }
+    private ${simpleClassName} convertToEntityAttributeByName(String dbData){
+        if(dbData == null || dbData.length() == 0) return null;
+        for(TestEnum vl : TestEnum.values()) {
+            String nm = vl.name();
+            if(nm.equalsIgnoreCase(dbData)) return vl;
+        }
+        return null;
+    }
+    private ${simpleClassName} convertToEntityAttributeByOrdinalValue(String dbData){
+        if(dbData == null || dbData.length() == 0) return null;
+        int ordinalValue = Integer.valueOf(dbData);
+        for(${simpleClassName} vl : ${simpleClassName}.values()) {
+            if(ordinalValue == vl.ordinal()) return vl;
+        }
+        return null;
+    }
+}
