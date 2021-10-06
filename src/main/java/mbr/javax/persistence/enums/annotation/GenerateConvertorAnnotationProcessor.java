@@ -13,19 +13,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@SupportedAnnotationTypes(
-        "mbr.javax.persistence.enums.annotation.EnumConvertor")
+@SupportedAnnotationTypes({
+    "mbr.javax.persistence.enums.annotation.GenConvertor",
+    "mbr.javax.persistence.enums.annotation.GenerateMappingConvertors"
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
+public class GenerateConvertorAnnotationProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        node(EnumConvertorAnnotationProcessor.class.getCanonicalName() + " IS INITIALISED");
+        node(GenerateConvertorAnnotationProcessor.class.getCanonicalName() + " IS INITIALISED");
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for(TypeElement annotation : annotations) {
+            String qName = annotation.getQualifiedName().toString();
+            node("QName: " + qName);
+            node("AnnoEnclosingEl: " + annotation.getEnclosingElement());
             _process(annotation, roundEnv);
         }
         return true;
@@ -33,15 +38,15 @@ public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
 
     private void _process(TypeElement annotation, RoundEnvironment roundEnv) {
         Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
-        node("@EnumConvertor annotated elements: " + annotatedElements.size());
+        node("@GenConvertor annotated elements: " + annotatedElements.size());
         for(Element element : annotatedElements) {
             if(ElementKind.ENUM != element.getKind()) {
-                messager().printMessage(Diagnostic.Kind.ERROR, "@EnumConvertor annotation must be applied to ENUMS", annotation);
+                messager().printMessage(Diagnostic.Kind.ERROR, "@GenConvertor annotation must be applied to ENUMS", annotation);
                 continue;
             }
-            EnumConvertor convertor = element.getAnnotation(EnumConvertor.class);
+            GenConvertor convertor = element.getAnnotation(GenConvertor.class);
             if(convertor == null) {
-                messager().printMessage(Diagnostic.Kind.ERROR, "EnumConvertor not found", annotation);
+                messager().printMessage(Diagnostic.Kind.ERROR, "GenConvertor not found", annotation);
                 return;
             }
             EnumType type = convertor.type();
@@ -64,7 +69,7 @@ public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
         String convertorClassName = convertorSimpleClassName;
         String packageName = null;
         if(lastDotIndex > 0) {
-            packageName = className.substring(0, lastDotIndex);
+            packageName = className.substring(0, lastDotIndex).toLowerCase();
             convertorClassName = packageName + "." + convertorSimpleClassName;
         }
 
@@ -86,7 +91,7 @@ public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
 
         bindings.put("packageLine", "package " + pkgName + ";");
         bindings.put("enumClassImportLine", "import " + qualifiedClassName + ";");
-
+        bindings.put("qualifiedClassName", qualifiedClassName);                                    
         if(pkgName == null) {
             bindings.put("package", "");
             bindings.put("enumClassImportLine", "");
