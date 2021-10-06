@@ -9,8 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface GenerateEnumsMappingConvertors {
-    //EnumType defaultType() default EnumType.STRING;
-
     /**
      * Default mapping type for all declared enums.
      * EnumType.STRING | EnumType.ORDINAL
