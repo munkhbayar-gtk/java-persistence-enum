@@ -8,17 +8,17 @@ ${enumClassImportLine}
 
 
 @Converter(autoApply = true)
-public class ${convertorSimpleClassName} implements AttributeConverter<${simpleClassName}, String> {
+public class ${convertorSimpleClassName} implements AttributeConverter<${qualifiedClassName}, String> {
 
     private final EnumType TYPE = EnumType.${enumType};
 
     @Override
-    public String convertToDatabaseColumn(${simpleClassName} attribute) {
+    public String convertToDatabaseColumn(${qualifiedClassName} attribute) {
         return attribute.name();
     }
 
     @Override
-    public ${simpleClassName} convertToEntityAttribute(String dbData) {
+    public ${qualifiedClassName} convertToEntityAttribute(String dbData) {
         if(TYPE == EnumType.STRING) {
             return convertToEntityAttributeByName(dbData);
         }
@@ -26,18 +26,18 @@ public class ${convertorSimpleClassName} implements AttributeConverter<${simpleC
 
 
     }
-    private ${simpleClassName} convertToEntityAttributeByName(String dbData){
+    private ${qualifiedClassName} convertToEntityAttributeByName(String dbData){
         if(dbData == null || dbData.length() == 0) return null;
-        for(TestEnum vl : TestEnum.values()) {
+        for(${qualifiedClassName} vl : ${qualifiedClassName}.values()) {
             String nm = vl.name();
             if(nm.equalsIgnoreCase(dbData)) return vl;
         }
         return null;
     }
-    private ${simpleClassName} convertToEntityAttributeByOrdinalValue(String dbData){
+    private ${qualifiedClassName} convertToEntityAttributeByOrdinalValue(String dbData){
         if(dbData == null || dbData.length() == 0) return null;
         int ordinalValue = Integer.valueOf(dbData);
-        for(${simpleClassName} vl : ${simpleClassName}.values()) {
+        for(${qualifiedClassName} vl : ${qualifiedClassName}.values()) {
             if(ordinalValue == vl.ordinal()) return vl;
         }
         return null;

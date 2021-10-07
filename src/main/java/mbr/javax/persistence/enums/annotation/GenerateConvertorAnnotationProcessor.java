@@ -12,49 +12,86 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-@SupportedAnnotationTypes(
-        "mbr.javax.persistence.enums.annotation.EnumConvertor")
+@SupportedAnnotationTypes({
+    "mbr.javax.persistence.enums.annotation.GenConvertor",
+    "mbr.javax.persistence.enums.annotation.GenerateEnumsMappingConvertors"
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
+public class GenerateConvertorAnnotationProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        node(EnumConvertorAnnotationProcessor.class.getCanonicalName() + " IS INITIALISED");
+        node(GenerateConvertorAnnotationProcessor.class.getCanonicalName() + " IS INITIALISED");
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for(TypeElement annotation : annotations) {
+            String qName = annotation.getQualifiedName().toString();
+            if(qName.endsWith("GenerateEnumsMappingConvertors")) {
+                _processConvertors(annotation, roundEnv);
+                continue;
+            }
             _process(annotation, roundEnv);
         }
         return true;
     }
 
+    private void _processConvertors(TypeElement annotation, RoundEnvironment roundEnv) {
+        Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
+        for(Element aEl : annotatedElements) {
+            GenerateEnumsMappingConvertors meta = aEl.getAnnotation(GenerateEnumsMappingConvertors.class);
+            EnumType type = meta.value();
+
+            Set<? extends Element> enums = roundEnv.getRootElements().stream().filter(el -> isEnum(el)).collect(Collectors.toSet());
+            node("Enums: " + enums.size());
+            for(Element elEnum : enums) {
+                TypeElement el = (TypeElement)elEnum;
+                String enumClassName = el.getQualifiedName().toString();
+
+                GenConvertor convertor = el.getAnnotation(GenConvertor.class);
+                if(convertor != null)continue;
+
+                startGenerating(enumClassName, type);
+            }
+        }
+
+    }
+
     private void _process(TypeElement annotation, RoundEnvironment roundEnv) {
         Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
-        node("@EnumConvertor annotated elements: " + annotatedElements.size());
+        node("@GenConvertor annotated elements: " + annotatedElements.size());
         for(Element element : annotatedElements) {
             if(ElementKind.ENUM != element.getKind()) {
-                messager().printMessage(Diagnostic.Kind.ERROR, "@EnumConvertor annotation must be applied to ENUMS", annotation);
+                messager().printMessage(Diagnostic.Kind.ERROR, "@GenConvertor annotation must be applied to ENUMS", annotation);
                 continue;
             }
-            EnumConvertor convertor = element.getAnnotation(EnumConvertor.class);
+            GenConvertor convertor = element.getAnnotation(GenConvertor.class);
             if(convertor == null) {
-                messager().printMessage(Diagnostic.Kind.ERROR, "EnumConvertor not found", annotation);
+                messager().printMessage(Diagnostic.Kind.ERROR, "GenConvertor not found", annotation);
                 return;
             }
-            EnumType type = convertor.type();
-            try{
-                writeJavaFile((TypeElement) element, type);
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
+            String enumClassName = ((TypeElement)element).getQualifiedName().toString();
+            startGenerating(enumClassName, convertor.type());
         }
     }
 
-    private void writeJavaFile(TypeElement element, EnumType type) throws IOException {
-        String className = element.getQualifiedName().toString();
+    private boolean isEnum(Element el) {
+        return ElementKind.ENUM == el.getKind();
+    }
+
+    private void startGenerating(String enumClassName, EnumType type) {
+        try{
+
+            writeJavaFile(enumClassName, type);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private void writeJavaFile(String enumClassName, EnumType type) throws IOException {
+        String className = enumClassName; //element.getQualifiedName().toString();
         node(className + " IS BEING PROCESSED ... ");
         int lastDotIndex = className.lastIndexOf(".");
 
@@ -64,7 +101,7 @@ public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
         String convertorClassName = convertorSimpleClassName;
         String packageName = null;
         if(lastDotIndex > 0) {
-            packageName = className.substring(0, lastDotIndex);
+            packageName = className.substring(0, lastDotIndex).toLowerCase();
             convertorClassName = packageName + "." + convertorSimpleClassName;
         }
 
@@ -86,9 +123,9 @@ public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
 
         bindings.put("packageLine", "package " + pkgName + ";");
         bindings.put("enumClassImportLine", "import " + qualifiedClassName + ";");
-
-        if(pkgName == null) {
-            bindings.put("package", "");
+        bindings.put("qualifiedClassName", qualifiedClassName);                                    
+        if(pkgName == null || pkgName.length() == 0) {
+            bindings.put("packageLine", "");
             bindings.put("enumClassImportLine", "");
         }
         bindings.put("simpleClassName", simpleClassName);
@@ -120,6 +157,12 @@ public class EnumConvertorAnnotationProcessor extends AbstractProcessor {
         return processingEnv.getFiler();
     }
 
+    private void error(String msg) {
+        messager().printMessage(Diagnostic.Kind.ERROR, msg);
+    }
+    private void error(String msg, TypeElement el) {
+        messager().printMessage(Diagnostic.Kind.ERROR, msg, el);
+    }
     private void node(String msg) {
         System.out.println("NOTE: " + msg);
         messager().printMessage(Diagnostic.Kind.NOTE, msg);

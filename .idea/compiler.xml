@@ -8,6 +8,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="enum-mapping-annotation-processor" options="-proc:none" />
+      <module name="java-persistence-enum" options="-proc:none" />
       <module name="javax-persistence-enum" options="-proc:none" />
     </option>
   </component>
