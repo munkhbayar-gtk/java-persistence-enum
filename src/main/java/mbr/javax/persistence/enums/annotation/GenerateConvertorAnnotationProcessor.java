@@ -9,9 +9,7 @@ import javax.persistence.EnumType;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SupportedAnnotationTypes({
@@ -39,13 +37,29 @@ public class GenerateConvertorAnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
+    private void collectEnums(Element el, Set<TypeElement> result) {
+        if(ElementKind.ENUM == el.getKind()) {
+            result.add((TypeElement) el);
+            return;
+        }
+        List<? extends Element> closedElements = el.getEnclosedElements();
+        for(Element closedEl : closedElements) {
+            collectEnums(closedEl, result);
+        }
+    }
+    private Set<TypeElement> getAllEnums(RoundEnvironment roundEnv) {
+        Set<? extends Element> roots = roundEnv.getRootElements();
+        Set<TypeElement> ret = new HashSet<>();
+        roots.stream().forEach(el->collectEnums(el, ret));
+        return ret;
+    }
     private void _processConvertors(TypeElement annotation, RoundEnvironment roundEnv) {
         Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
         for(Element aEl : annotatedElements) {
+            node("Root: " + ((TypeElement)aEl).getQualifiedName().toString());
             GenerateEnumsMappingConvertors meta = aEl.getAnnotation(GenerateEnumsMappingConvertors.class);
             EnumType type = meta.value();
-
-            Set<? extends Element> enums = roundEnv.getRootElements().stream().filter(el -> isEnum(el)).collect(Collectors.toSet());
+            Set<? extends Element> enums = getAllEnums(roundEnv);
             node("Enums: " + enums.size());
             for(Element elEnum : enums) {
                 TypeElement el = (TypeElement)elEnum;
