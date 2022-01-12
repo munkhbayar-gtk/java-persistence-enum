@@ -14,6 +14,7 @@ public class ${convertorSimpleClassName} implements AttributeConverter<${qualifi
 
     @Override
     public String convertToDatabaseColumn(${qualifiedClassName} attribute) {
+        if(attribute == null) return null;
         return attribute.name();
     }
 
