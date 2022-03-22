@@ -6,7 +6,6 @@ import javax.persistence.EnumType;
 
 ${enumClassImportLine}
 
-
 @Converter(autoApply = true)
 public class ${convertorSimpleClassName} implements AttributeConverter<${qualifiedClassName}, String> {
 
