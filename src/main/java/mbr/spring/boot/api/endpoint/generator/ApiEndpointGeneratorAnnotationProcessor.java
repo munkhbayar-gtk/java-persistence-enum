@@ -47,7 +47,7 @@ public class ApiEndpointGeneratorAnnotationProcessor extends AbstractProcessor {
             ApiEndpointGenerate genAnno = aEl.getAnnotation(ApiEndpointGenerate.class);
             Set<? extends Element> elements = roundEnv
                     .getRootElements().stream().filter(this::isController).collect(Collectors.toSet());
-
+            jPackage = genAnno.jPackage();
             elements.forEach(e -> {
                 node(e.getSimpleName().toString());
                 generateEndpoints(e);
@@ -126,6 +126,11 @@ public class ApiEndpointGeneratorAnnotationProcessor extends AbstractProcessor {
     }
 
     private String mergeByReplacement(String codeTemplate) {
+
+        int jPackageIdx = codeTemplate.indexOf("${packageName}");
+        if(jPackageIdx !=-1){
+            codeTemplate = codeTemplate.replace("${packageName}", jPackage);
+        }
         int index = codeTemplate.indexOf("${RESULTS}");
         if (index != -1) {
             StringBuilder sb = new StringBuilder();
@@ -157,7 +162,7 @@ public class ApiEndpointGeneratorAnnotationProcessor extends AbstractProcessor {
     }
 
     private List<EnumVal> results;
-
+    private String jPackage="";
     private void generateEndpoints(Element el) {
         RequestMapping mapping = el.getAnnotation(RequestMapping.class);
         String[] uris = mapping.value();
@@ -276,23 +281,6 @@ public class ApiEndpointGeneratorAnnotationProcessor extends AbstractProcessor {
             if (v != null) return v;
         }
         return null;
-    }
-
-    private IGenerator create(ApiEndpointGenerate genAnno) {
-        try {
-            Class<? extends IGenerator> generator = genAnno.generator();
-            return generator.getConstructor().newInstance();
-        } catch (Exception e) {
-            error("ERR: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String format(String str, Map<String, String> bindings) {
-        for (Map.Entry<String, String> e : bindings.entrySet()) {
-            str = format(str, e.getKey(), e.getValue());
-        }
-        return str;
     }
 
     private static String format(String template, String variable, String value) {

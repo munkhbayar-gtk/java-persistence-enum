@@ -1,4 +1,4 @@
-package mn.infinite.nes.middleware;
+package ${packageName};
 
 public final class ApiEndpoints {
 

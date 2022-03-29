@@ -8,5 +8,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface ApiEndpointGenerate {
-    Class<? extends IGenerator> generator() default IGenerator.class;
+    String jPackage() default "";
 }
