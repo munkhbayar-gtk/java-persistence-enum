@@ -1,1 +1,2 @@
 mbr.javax.persistence.enums.annotation.GenerateConvertorAnnotationProcessor
+mbr.spring.boot.api.endpoint.generator.ApiEndpointGeneratorAnnotationProcessor
